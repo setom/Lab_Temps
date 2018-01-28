@@ -22,6 +22,7 @@ For each airport in the selection:
     - update the Security field to SAFE
 '''
 def findHighRiskAirports(airports, roads) :
+    arcpy.AddField_management(airports, "SECURITY", "TEXT", "", "", "25", "", "", "")
     riskArea = arcpy.Buffer_analysis(roads, "Buffered_Roads", "10000 meters", "FULL", "ROUND", "ALL")
     bufferedRoads = "Buffered_Roads.shp"
     #SELECTBYLOCATION requires that airports be a feature layer
@@ -61,5 +62,36 @@ def findAirportRisks(airports, roads) :
                     row[0] = "MED RISK"
                     cursor.updateRow(row)
 
-#Main                   
-findAirportRisks(apt, rds)
+
+'''
+Create a new (empty) shp with 'name' param (fix naming convention if requ'd)
+Select all airports with Security == AT RISK || Security == MED RISK
+For each airport:
+    insert them to the shp file
+'''
+def createAirportRiskShp(name, airports) :
+    name = name.replace(" ", "_")
+    arcpy.CreateFeatureclass_management(env.workspace, name, "POINT", "", "", "",  arcpy.Describe(airports).spatialReference)
+    arcpy.MakeFeatureLayer_management(airports, "atRisk_medRisk_airports_lyr")
+    selection = arcpy.SelectLayerByAttribute_management("atRisk_medRisk_airports_lyr", "NEW_SELECTION", "Security = 'AT RISK' OR Security = 'MED RISK'") 
+    #TODO: CONTINUE BELOW - THIS ISN"T WORKING
+    #add the fields to new shpfile
+    fds = arcpy.ListFields(airports)
+    newfds = arcpy.ListFields(name)
+    fields = []
+    for field in fds :
+        if field.name not in newfds :
+            arcpy.AddField_management(name, field.name, field.type, "", "", field.length, "", "", "")
+            fields.append(field.name)
+    with arcpy.da.InsertCursor(name, fields) as insertCursor :
+       with arcpy.da.SearchCursor(selection, "*") as searchCursor :
+           for row in searchCursor:
+               insertCursor.insertRow(row)
+           
+
+         
+#********************** Main **************************
+#Process the Airports shp to properly encode AT RISK, MED RISK and SAFE
+#findAirportRisks(apt, rds)
+#Create the output shapefile
+createAirportRiskShp("Alaska at risk.shp", apt)
