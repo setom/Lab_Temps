@@ -5,6 +5,8 @@ Finds all airports within 50km of AT RISK airports and marks them as MED RISK
 import arcpy
 from arcpy import env
 env.workspace = "D:\Projects\ArcGIS Projects\GIS501_Lab3\RAW_DATA\Exercise07"
+#Overwrite files if they exist
+arcpy.env.overwriteOutput = True 
 #Get the airport shapefile
 apt = "airports.shp"
 #Get the road shapefile
@@ -69,29 +71,34 @@ Select all airports with Security == AT RISK || Security == MED RISK
 For each airport:
     insert them to the shp file
 '''
-def createAirportRiskShp(name, airports) :
+def createAirportRiskShpOLD(name, airports) :
     name = name.replace(" ", "_")
     arcpy.CreateFeatureclass_management(env.workspace, name, "POINT", "", "", "",  arcpy.Describe(airports).spatialReference)
     arcpy.MakeFeatureLayer_management(airports, "atRisk_medRisk_airports_lyr")
-    selection = arcpy.SelectLayerByAttribute_management("atRisk_medRisk_airports_lyr", "NEW_SELECTION", "Security = 'AT RISK' OR Security = 'MED RISK'") 
-    #TODO: CONTINUE BELOW - THIS ISN"T WORKING
     #add the fields to new shpfile
     fds = arcpy.ListFields(airports)
-    newfds = arcpy.ListFields(name)
-    fields = []
-    for field in fds :
-        if field.name not in newfds :
-            arcpy.AddField_management(name, field.name, field.type, "", "", field.length, "", "", "")
-            fields.append(field.name)
-    with arcpy.da.InsertCursor(name, fields) as insertCursor :
-       with arcpy.da.SearchCursor(selection, "*") as searchCursor :
-           for row in searchCursor:
-               insertCursor.insertRow(row)
-           
+    selection = arcpy.SelectLayerByAttribute_management("atRisk_medRisk_airports_lyr", "NEW_SELECTION", "Security = 'AT RISK' OR Security = 'MED RISK'") 
+    #TODO: CONTINUE BELOW - THIS ISN"T WORKING
+    with arcpy.da.SearchCursor(selection, "*") as seCursor :
+        for seRow in seCursor :
+            with arcpy.da.InsertCursor(name, "*") as inCursor :
+                inCursor.insertRow(seRow)
+                    
 
-         
+'''
+Fix the name of the output shp if required
+Select all airports from the AT RISK or MED RISK
+Copy those features to a new feature layer with the desired name
+'''
+def createAirportRiskShp(name, airports) :
+    name = name.replace(" ", "_")
+    arcpy.MakeFeatureLayer_management(airports, "atRisk_medRisk_airports_lyr")
+    selection = arcpy.SelectLayerByAttribute_management("atRisk_medRisk_airports_lyr", "NEW_SELECTION", "Security = 'AT RISK' OR Security = 'MED RISK'") 
+    arcpy.CopyFeatures_management(selection, name)
+
+    
 #********************** Main **************************
 #Process the Airports shp to properly encode AT RISK, MED RISK and SAFE
-#findAirportRisks(apt, rds)
+findAirportRisks(apt, rds)
 #Create the output shapefile
 createAirportRiskShp("Alaska at risk.shp", apt)
