@@ -5,13 +5,19 @@ env.workspace = "D:\Projects\ArcGIS Projects\GIS501_Lab3\RAW_DATA\Exercise07"
 #Overwrite files if they exist
 arcpy.env.overwriteOutput = True 
 
-
+'''
+Returns the number of sides a user wants for a polygon
+'''
 def getSides() :
     sides = input("How many sides do you want the turtle to draw?")
     while sides < 3 :
         sides = input("Polygons must have at least 3 sides! How many sides do you want to draw?")
     return sides
 
+'''
+Param number of sided polygon to draw
+Returns an arcpy array of points for X sided polygon
+'''
 def getArray(sides) :
     array = arcpy.Array()
     point = arcpy.Point()
@@ -28,7 +34,12 @@ def getArray(sides) :
         sides -= 1
     return array
     wn.exitonclick()
-    
+
+'''
+Param arcpy array of points
+Returns X
+Creates a feature of given points
+'''
 def makePolygon(array) :
     sr = arcpy.SpatialReference(4326)
     arcpy.CreateFeatureclass_management(env.workspace, "turtle_polygon.shp", "POLYGON", "", "", "", sr)
