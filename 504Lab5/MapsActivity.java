@@ -1,3 +1,6 @@
+//Thanks to https://developers.google.com/maps/documentation/android-api/start For the getting started tutorial. 
+//I was required to change the manifest, and to supplement my api key in the gradle build. 
+
 package com.example.test;
 
 import android.support.v4.app.FragmentActivity;
