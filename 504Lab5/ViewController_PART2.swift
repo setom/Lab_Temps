@@ -5,6 +5,7 @@
 //  Created by Matthew Seto on 3/11/18.
 //  Copyright © 2018 Matthew Seto. All rights reserved.
 //
+// Thanks to the Mapbox Tutorial: https://www.mapbox.com/install/ios/download-add/ For getting started. 
 
 import UIKit
 import Mapbox
